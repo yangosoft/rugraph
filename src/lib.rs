@@ -1,3 +1,5 @@
+pub mod rugraph;
+
 #[cfg(test)]
 mod tests {
     #[test]

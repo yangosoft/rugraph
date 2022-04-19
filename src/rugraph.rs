@@ -3,7 +3,8 @@ use std::fs::File;
 use std::io::Write;
 use std::rc::Rc;
 use std::vec::Vec;
-/// `Graph` is actually a directed graph where each node is an u32
+/// `Graph` is actually a `generic` directed graph where each node of type `T`
+///  must implement: `T: Ord + Clone + std::fmt::Display + std::fmt::Debug`
 pub struct Graph<T>
 where
     T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
@@ -42,6 +43,7 @@ where
         }
     }
 
+    /// Adds a new node `elem` to the graph
     pub fn add_node(&mut self, elem: T) {
         let n = Rc::new(Node::<T>::new(elem));
         println!("Adding new node {}", n.elem);
@@ -50,6 +52,8 @@ where
         println!("nodes length: {}", nodes.len());
     }
 
+    ///Creates a new edge from node `from` to node `to`
+    ///nodes `from` and `to` must be previously added to the graph
     pub fn add_edge(&mut self, from: T, to: T) {
         let nodes = self.nodes.borrow_mut();
 
@@ -117,6 +121,7 @@ where
         return false;
     }
 
+    /// Returns if node `to` is a neighbord of `from`
     pub fn is_directly_connected(&self, from: T, to: T) -> bool {
         let nodes = self.nodes.borrow();
         let idx_from = self.get_index_by_node_id(from.clone());
@@ -133,6 +138,8 @@ where
         return false;
     }
 
+    /// Returns a `Vec<Vec<T>>` containing all the simple paths
+    /// from node `from` to node `to`
     pub fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<T>> {
         let mut ret = Vec::<Vec<T>>::new();
         let mut current_path = Vec::<T>::new();

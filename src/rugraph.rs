@@ -1,7 +1,8 @@
 use std::cell::RefCell;
+use std::fs::File;
+use std::io::Write;
 use std::rc::Rc;
 use std::vec::Vec;
-
 /// `Graph` is actually a directed graph where each node is an u32
 pub struct Graph<T>
 where
@@ -142,6 +143,29 @@ where
         return ret;
     }
 
+    /// Exports the graph to a dot file. `file` must be a valid
+    /// file ready to be written.
+    /// `graph_name` is the name of the graph
+    pub fn to_dot(&self, file: &mut File, graph_name: &String) {
+        // digraph nombre_del_diagrama {
+        //a -> b -> c;
+        //b -> d;
+        //}
+        let mut s = String::from("digraph ") + graph_name + &String::from("{\n");
+        let nodes = self.nodes.borrow();
+        for n in nodes.iter() {
+            s = s + &n.elem.to_string();
+            for m in n.neighbors.borrow().iter() {
+                s = s + &String::from(" -> ") + &m.elem.to_string();
+            }
+
+            s = s + &String::from(";\n");
+        }
+        s = s + &String::from("}\n");
+
+        file.write_all(s.as_bytes()).expect("Error writing file!");
+    }
+
     fn dfs(
         &self,
         from: T,
@@ -188,6 +212,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::Graph;
+    use std::fs::File;
     #[test]
     fn it_works() {
         let mut graph = Graph::<i32>::new();
@@ -266,6 +291,9 @@ mod tests {
                 vec![1, 5]
             ]
         );
+
+        let mut fd = File::create("test2.dot").expect("error creating file");
+        graph.to_dot(&mut fd, &String::from("paths_test"))
     }
 
     #[test]
@@ -284,5 +312,20 @@ mod tests {
         println!("{:?}", paths);
 
         assert_eq!(paths, vec![vec!["a", "b", "c", "d"], vec!["a", "d"]]);
+    }
+
+    #[test]
+    fn to_dot() {
+        let mut fd = File::create("test1.dot").expect("error creating file");
+        let mut graph = Graph::<String>::new();
+        graph.add_node("a".to_string());
+        graph.add_node("b".to_string());
+        graph.add_node("c".to_string());
+        graph.add_node("d".to_string());
+        graph.add_edge("a".to_string(), "b".to_string());
+        graph.add_edge("b".to_string(), "c".to_string());
+        graph.add_edge("c".to_string(), "d".to_string());
+        graph.add_edge("a".to_string(), "d".to_string());
+        graph.to_dot(&mut fd, &String::from("to_dot_test"))
     }
 }

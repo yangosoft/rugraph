@@ -147,10 +147,6 @@ where
     /// file ready to be written.
     /// `graph_name` is the name of the graph
     pub fn to_dot(&self, file: &mut File, graph_name: &String) {
-        // digraph nombre_del_diagrama {
-        //a -> b -> c;
-        //b -> d;
-        //}
         let mut s = String::from("digraph ") + graph_name + &String::from("{\n");
         let nodes = self.nodes.borrow();
         for n in nodes.iter() {

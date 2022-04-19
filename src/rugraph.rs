@@ -1,39 +1,55 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::rc::Weak;
-use std::thread::current;
 use std::vec::Vec;
 
 /// `Graph` is actually a directed graph where each node is an u32
-pub struct Graph {
+pub struct Graph<T>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
     /// Nodes are stored in the heap
-    nodes: RefCell<Vec<Rc<Node>>>,
+    nodes: RefCell<Vec<Rc<Node<T>>>>,
 }
 /// A `Node` is represented as an u32 and a list of pointers to their neighbors
-struct Node {
-    elem: u32,
-    neighbors: RefCell<Vec<Rc<Node>>>,
+struct Node<T>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
+    elem: T,
+    neighbors: RefCell<Vec<Rc<Node<T>>>>,
 }
 
-impl Graph {
+impl<T> Node<T>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
+    pub fn new(elem: T) -> Self {
+        Node::<T> {
+            elem: elem,
+            neighbors: RefCell::new(Vec::new()),
+        }
+    }
+}
+
+impl<T> Graph<T>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
     pub fn new() -> Self {
-        Graph {
+        Graph::<T> {
             nodes: RefCell::new(vec![]),
         }
     }
 
-    pub fn add_node(&mut self, elem: u32) {
-        let mut n = Rc::new(Node {
-            elem: elem,
-            neighbors: RefCell::new(Vec::new()),
-        });
+    pub fn add_node(&mut self, elem: T) {
+        let n = Rc::new(Node::<T>::new(elem));
         println!("Adding new node {}", n.elem);
         let mut nodes = self.nodes.borrow_mut();
         nodes.push(n);
         println!("nodes length: {}", nodes.len());
     }
 
-    pub fn add_edge(&mut self, from: u32, to: u32) {
+    pub fn add_edge(&mut self, from: T, to: T) {
         let nodes = self.nodes.borrow_mut();
 
         let idx_from = nodes.iter().position(|r| r.elem == from).unwrap();
@@ -49,47 +65,47 @@ impl Graph {
     }
 
     /// Returns a vector containing the `neighbors` of node `from`
-    pub fn get_neighbors(&self, from: u32) -> Vec<u32> {
+    pub fn get_neighbors(&self, from: T) -> Vec<T> {
         let nodes = self.nodes.borrow();
-        let mut neighbors = Vec::<u32>::new();
+        let mut neighbors = Vec::<T>::new();
         let idx_from = self.get_index_by_node_id(from);
         let n = &nodes[idx_from];
 
         //n.neighbors
         for e in n.neighbors.borrow().iter() {
-            neighbors.push(e.elem);
+            neighbors.push(e.elem.clone());
         }
 
         return neighbors;
     }
 
-    fn get_index_by_node_id(&self, from: u32) -> usize {
+    fn get_index_by_node_id(&self, from: T) -> usize {
         let nodes = self.nodes.borrow();
         let idx_from = nodes.iter().position(|r| r.elem == from).unwrap();
         return idx_from;
     }
 
     /// Returns if a node `from` is connected to a node `to`
-    pub fn is_connected(&self, from: u32, to: u32) -> bool {
+    pub fn is_connected(&self, from: T, to: T) -> bool {
         println!("Checking from {} to {}", from, to);
-        let mut seen = Vec::<u32>::new();
-        let mut to_process = Vec::<u32>::new();
-        seen.push(from);
-        to_process.push(from);
+        let mut seen = Vec::<T>::new();
+        let mut to_process = Vec::<T>::new();
+        seen.push(from.clone());
+        to_process.push(from.clone());
 
         let mut end = false;
         while !end {
-            let node_id = to_process.pop().unwrap();
+            let node_id = to_process.pop().unwrap().clone();
 
-            let neighbors = self.get_neighbors(node_id);
+            let neighbors = self.get_neighbors(node_id.clone());
             println!("  |-> Node {} neighbors {:?}", node_id, neighbors);
             if neighbors.contains(&to) {
                 return true;
             } else {
                 for n in neighbors.iter() {
                     if !seen.contains(n) {
-                        to_process.push(*n);
-                        seen.push(*n);
+                        to_process.push(n.clone());
+                        seen.push(n.clone());
                     }
                 }
             }
@@ -100,10 +116,10 @@ impl Graph {
         return false;
     }
 
-    pub fn is_directly_connected(&self, from: u32, to: u32) -> bool {
+    pub fn is_directly_connected(&self, from: T, to: T) -> bool {
         let nodes = self.nodes.borrow();
-        let idx_from = self.get_index_by_node_id(from);
-        let idx_to = self.get_index_by_node_id(to);
+        let idx_from = self.get_index_by_node_id(from.clone());
+        let idx_to = self.get_index_by_node_id(to.clone());
         let n = &nodes[idx_from];
         let m = nodes[idx_to].clone();
         for e in n.neighbors.borrow().iter() {
@@ -116,10 +132,10 @@ impl Graph {
         return false;
     }
 
-    pub fn all_simple_paths(&self, from: u32, to: u32) -> Vec<Vec<u32>> {
-        let mut ret = Vec::<Vec<u32>>::new();
-        let mut current_path = Vec::<u32>::new();
-        let mut visited = Vec::<u32>::new();
+    pub fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<T>> {
+        let mut ret = Vec::<Vec<T>>::new();
+        let mut current_path = Vec::<T>::new();
+        let mut visited = Vec::<T>::new();
 
         self.dfs(from, to, &mut ret, &mut current_path, &mut visited);
 
@@ -128,17 +144,17 @@ impl Graph {
 
     fn dfs(
         &self,
-        from: u32,
-        to: u32,
-        simple_path: &mut Vec<Vec<u32>>,
-        current_path: &mut Vec<u32>,
-        visited: &mut Vec<u32>,
+        from: T,
+        to: T,
+        simple_path: &mut Vec<Vec<T>>,
+        current_path: &mut Vec<T>,
+        visited: &mut Vec<T>,
     ) {
         if visited.contains(&from) {
             return;
         }
-        visited.push(from);
-        current_path.push(from);
+        visited.push(from.clone());
+        current_path.push(from.clone());
         if from == to {
             simple_path.push(current_path.clone());
             if visited.contains(&from) {
@@ -149,9 +165,9 @@ impl Graph {
             }
         }
 
-        let neighbors = self.get_neighbors(from);
+        let neighbors = self.get_neighbors(from.clone());
         for n in neighbors.iter() {
-            self.dfs(n.clone(), to, simple_path, current_path, visited);
+            self.dfs(n.clone(), to.clone(), simple_path, current_path, visited);
         }
 
         current_path.pop();
@@ -162,7 +178,10 @@ impl Graph {
     }
 }
 
-impl Drop for Graph {
+impl<T> Drop for Graph<T>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
     fn drop(&mut self) {}
 }
 
@@ -171,7 +190,7 @@ mod tests {
     use super::Graph;
     #[test]
     fn it_works() {
-        let mut graph = Graph::new();
+        let mut graph = Graph::<i32>::new();
         graph.add_node(1);
         graph.add_node(2);
         graph.add_node(3);
@@ -203,7 +222,7 @@ mod tests {
 
     #[test]
     fn paths() {
-        let mut graph = Graph::new();
+        let mut graph = Graph::<i32>::new();
         graph.add_node(1);
         graph.add_node(2);
         graph.add_node(3);
@@ -238,5 +257,32 @@ mod tests {
 
         let paths = graph.all_simple_paths(1, 5);
         println!("{:?}", paths);
+        assert_eq!(
+            paths,
+            vec![
+                vec![1, 2, 3, 4, 5],
+                vec![1, 2, 3, 9, 10, 5],
+                vec![1, 2, 3, 7, 8, 5],
+                vec![1, 5]
+            ]
+        );
+    }
+
+    #[test]
+    fn generics() {
+        let mut graph = Graph::<String>::new();
+        graph.add_node("a".to_string());
+        graph.add_node("b".to_string());
+        graph.add_node("c".to_string());
+        graph.add_node("d".to_string());
+        graph.add_edge("a".to_string(), "b".to_string());
+        graph.add_edge("b".to_string(), "c".to_string());
+        graph.add_edge("c".to_string(), "d".to_string());
+        graph.add_edge("a".to_string(), "d".to_string());
+
+        let paths = graph.all_simple_paths("a".to_string(), "d".to_string());
+        println!("{:?}", paths);
+
+        assert_eq!(paths, vec![vec!["a", "b", "c", "d"], vec!["a", "d"]]);
     }
 }

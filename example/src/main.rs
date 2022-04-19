@@ -14,7 +14,7 @@ fn main() {
     graph.add_edge("b".to_string(), "c".to_string());
     graph.add_edge("c".to_string(), "d".to_string());
     graph.add_edge("a".to_string(), "d".to_string());
-    graph.to_dot(&mut fd, &String::from("to_dot_test"))
+    graph.to_dot_file(&mut fd, &String::from("to_dot_test"))
 
     
 }

@@ -4,6 +4,11 @@ version = "0.2.0"
 edition = "2021"
 authors = ["yangosoft"]
 description = "Simple directed and multidirected graph library."
+license-file = "LICENSE"
+homepage = "https://github.com/yangosoft/rugraph"
+repository = "https://github.com/yangosoft/rugraph"
+readme = "README.md"
+keywords = ["graph", "digraph", "multidirected", "multidigraph", "dot"]
 
 
 

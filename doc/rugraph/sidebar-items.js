@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Graph","`Graph` is actually a `generic` directed graph where each node of type `T` must implement: `T: Ord + Clone + std::fmt::Display + std::fmt::Debug`"]]});

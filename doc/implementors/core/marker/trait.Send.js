@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["rugraph"] = [{"text":"impl&lt;T&gt; !<a class=\"trait\" href=\"https://doc.rust-lang.org/1.56.1/core/marker/trait.Send.html\" title=\"trait core::marker::Send\">Send</a> for <a class=\"struct\" href=\"rugraph/struct.Graph.html\" title=\"struct rugraph::Graph\">Graph</a>&lt;T&gt;","synthetic":true,"types":["rugraph::Graph"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

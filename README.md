@@ -23,7 +23,7 @@ Some pitfalls:
 * Perfomance?
 * ...
 
-See [doc](doc/rugraph/index.html) for documentation and [examples](examples/).
+See the [examples](examples/).
 
 
 

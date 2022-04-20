@@ -86,7 +86,7 @@ where
         let idx_from = nodes.iter().position(|r| r.elem == from).unwrap();
         let idx_to = nodes.iter().position(|r| r.elem == to).unwrap();
 
-        let elem = nodes[idx_to].elem.clone();
+        //let elem = nodes[idx_to].elem.clone();
         /*println!(
             "Index from {} -> {} index to {} -> {}",
             idx_from, from, idx_to, to

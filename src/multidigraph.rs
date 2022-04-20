@@ -1,9 +1,10 @@
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::Write;
 use std::rc::Rc;
 use std::vec::Vec;
-use std::borrow::Borrow;
+
 /// `MultiDiGraph` is actually a `generic` multi directed graph where each node of type `T`
 ///  and edge of type `E`
 ///  must implement: `T: Ord + Clone + std::fmt::Display + std::fmt::Debug` and
@@ -248,29 +249,30 @@ where
         return false;
     }
 
-
-    /// Returns a `Vec<Vec<T>>` containing all the simple paths
+    /// Returns a vector `Vec<Vec<(T, T, E)>>` containing all the simple paths
     /// from node `from` to node `to` in a vector of tuples `(from,to,edge)`
-    pub fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<(T,T,E)>> {
-        let mut ret = Vec::<Vec<(T,T,E)>>::new();
-        let mut current_path = Vec::<(T,T,E)>::new();
-        let mut visited = Vec::<(T,T,E)>::new();
+    pub fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<(T, T, E)>> {
+        let mut ret = Vec::<Vec<(T, T, E)>>::new();
+        let mut current_path = Vec::<(T, T, E)>::new();
+        let mut visited = Vec::<(T, T, E)>::new();
         let neighbors = self.get_neighbors(from.clone());
-        if neighbors.len() == 0
-        {
+        if neighbors.len() == 0 {
             return ret;
         }
-        
         for n in neighbors.iter() {
-            self.dfs(from.clone(),n.0.clone(), to.clone(), n.0.clone(), n.1.clone(), &mut ret, &mut current_path, &mut visited);
+            self.dfs(
+                from.clone(),
+                n.0.clone(),
+                to.clone(),
+                n.0.clone(),
+                n.1.clone(),
+                &mut ret,
+                &mut current_path,
+                &mut visited,
+            );
         }
-        /*let edge = neighbors[0].1.clone();
-        let dst = neighbors[0].0.clone();
-        self.dfs(from.clone(), from, to, dst, edge, &mut ret, &mut current_path, &mut visited);*/
-
         return ret;
     }
-
 
     fn dfs(
         &self,
@@ -279,19 +281,26 @@ where
         to: T,
         dst: T,
         edge: E,
-        simple_path: &mut Vec<Vec<(T,T,E)>>,
-        current_path: &mut Vec<(T,T,E)>,
-        visited: &mut Vec<(T,T,E)>,
+        simple_path: &mut Vec<Vec<(T, T, E)>>,
+        current_path: &mut Vec<(T, T, E)>,
+        visited: &mut Vec<(T, T, E)>,
     ) {
-        if visited.contains(&(from.clone(),dst.clone(),edge.clone())) {
+        if visited.contains(&(from.clone(), dst.clone(), edge.clone())) {
             return;
         }
-        visited.push((from.clone(),dst.clone(),edge.clone()));
-        current_path.push((previous_from.clone(),dst.clone(),edge.clone()));
+        visited.push((from.clone(), dst.clone(), edge.clone()));
+        current_path.push((previous_from.clone(), dst.clone(), edge.clone()));
         if from == to {
             simple_path.push(current_path.clone());
-            if visited.contains(&(from.clone(),dst.clone(),edge.clone())) {
-                let index = visited.iter().position(|x| x.0.clone() == from.clone()  && x.1.clone() == dst.clone() && x.2.clone() == edge.clone()).unwrap();
+            if visited.contains(&(from.clone(), dst.clone(), edge.clone())) {
+                let index = visited
+                    .iter()
+                    .position(|x| {
+                        x.0.clone() == from.clone()
+                            && x.1.clone() == dst.clone()
+                            && x.2.clone() == edge.clone()
+                    })
+                    .unwrap();
                 visited.remove(index);
                 current_path.pop();
                 return;
@@ -300,12 +309,28 @@ where
 
         let neighbors = self.get_neighbors(dst.clone());
         for n in neighbors.iter() {
-            self.dfs(dst.clone(),n.0.clone(), to.clone(), n.0.clone(), n.1.clone(), simple_path, current_path, visited);
+            self.dfs(
+                dst.clone(),
+                n.0.clone(),
+                to.clone(),
+                n.0.clone(),
+                n.1.clone(),
+                simple_path,
+                current_path,
+                visited,
+            );
         }
 
         current_path.pop();
         if visited.contains(&(from.clone(), dst.clone(), edge.clone())) {
-            let index = visited.iter().position(|x| x.0.clone() == from.clone() && x.1.clone() == dst.clone() && x.2.clone() == edge.clone()).unwrap();
+            let index = visited
+                .iter()
+                .position(|x| {
+                    x.0.clone() == from.clone()
+                        && x.1.clone() == dst.clone()
+                        && x.2.clone() == edge.clone()
+                })
+                .unwrap();
             visited.remove(index);
         }
     }
@@ -323,23 +348,34 @@ where
         let mut s = String::from("digraph ") + graph_name + &String::from("{\n");
         let nodes = self.nodes.borrow();
         for n in nodes.iter() {
-           
             for m in n.neighbors.borrow().iter() {
                 s = s + &n.elem.to_string();
-                s = s + &String::from(" -> ") + &m.node.elem.to_string() + &String::from(" [label=\"") + &m.edge.to_string() + &String::from("\"];\n");
+                s = s
+                    + &String::from(" -> ")
+                    + &m.node.elem.to_string()
+                    + &String::from(" [label=\"")
+                    + &m.edge.to_string()
+                    + &String::from("\"];\n");
             }
-
-            
         }
         s = s + &String::from("}\n");
         return s;
     }
 }
 
+impl<T, E> Drop for MultiDiGraph<T, E>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+    E: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
+    fn drop(&mut self) {
+        self.nodes.borrow_mut().clear();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::MultiDiGraph;
-    use std::fs::File;
     #[test]
     fn multidigraph_test1() {
         let mut graph = MultiDiGraph::<i32, i32>::new();
@@ -381,7 +417,7 @@ mod tests {
 
     #[test]
     fn multidigraph_generics() {
-        let mut graph = MultiDiGraph::<String,String>::new();
+        let mut graph = MultiDiGraph::<String, String>::new();
         graph.add_node("a".to_string());
         graph.add_node("b".to_string());
         graph.add_node("c".to_string());
@@ -394,8 +430,18 @@ mod tests {
         println!("From a to d");
         let paths = graph.all_simple_paths("a".to_string(), "d".to_string());
         println!("{:?}", paths);
-//
-        assert_eq!(paths, vec![vec![("a".to_string(),"b".to_string(),"ab".to_string()), ("b".to_string(),"c".to_string(),"bc".to_string()), ("c".to_string(),"d".to_string(),"cd".to_string())], vec![("a".to_string(), "d".to_string(),"ad".to_string())]]);
+        //
+        assert_eq!(
+            paths,
+            vec![
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc".to_string()),
+                    ("c".to_string(), "d".to_string(), "cd".to_string())
+                ],
+                vec![("a".to_string(), "d".to_string(), "ad".to_string())]
+            ]
+        );
 
         let s = graph.to_dot_string(&String::from("to_dot_multidigraph_test"));
         println!("Dot:\n{}", s);

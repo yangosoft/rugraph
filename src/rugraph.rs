@@ -4,6 +4,16 @@ use std::fs::File;
 use std::io::Write;
 use std::rc::Rc;
 use std::vec::Vec;
+
+/// TODO This trait will be implemented in the future
+trait IGraph<T> {
+    fn add_node(&mut self, elem: T);
+    fn is_connected(&self, from: T, to: T) -> bool;
+    fn is_directly_connected(&self, from: T, to: T) -> bool;
+    fn to_dot_string(&self, graph_name: &String) -> String;
+    fn to_dot_file(&self, file: &mut File, graph_name: &String);
+}
+
 /// `Graph` is actually a `generic` directed graph where each node of type `T`
 ///  must implement: `T: Ord + Clone + std::fmt::Display + std::fmt::Debug`
 pub struct Graph<T>
@@ -46,24 +56,9 @@ where
 
     /// Adds a new node `elem` to the graph
     pub fn add_node(&mut self, elem: T) {
-        /*let ret_idx_from = self.get_index_by_node_id(elem.clone());
-
-        let mut found = true;
-        match ret_idx_from {
-            Ok(_v) => {} ,
-            Err(_e) => { found = false; }
-        };
-
-        if found {
-            return;
-        }*/
-
         if self.node_exists(elem.clone()) {
             return;
         }
-
-        //TODO: exception if elem already in nodes
-        //let idx = self.get_index_by_node_id(elem.clone());
 
         let mut nodes = self.nodes.borrow_mut();
         let n = Rc::new(Node::<T>::new(elem));
@@ -77,7 +72,10 @@ where
     ///Creates a new edge from node `from` to node `to`
     ///nodes `from` and `to` must be previously added to the graph
     pub fn add_edge(&mut self, from: T, to: T) {
-        if !self.node_exists(from.clone()) || !self.node_exists(to.clone()) || self.is_directly_connected(from.clone(), to.clone()) {
+        if !self.node_exists(from.clone())
+            || !self.node_exists(to.clone())
+            || self.is_directly_connected(from.clone(), to.clone())
+        {
             return;
         }
 
@@ -92,11 +90,8 @@ where
             idx_from, from, idx_to, to
         );*/
 
-       
         let n = &nodes[idx_from];
         let m = nodes[idx_to].clone();
-        
-
 
         n.neighbors.borrow_mut().push(m);
     }

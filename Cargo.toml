@@ -9,7 +9,7 @@ homepage = "https://github.com/yangosoft/rugraph"
 repository = "https://github.com/yangosoft/rugraph"
 readme = "README.md"
 keywords = ["graph", "digraph", "multidirected", "multidigraph", "dot"]
-documentation = ""
+
 
 
 

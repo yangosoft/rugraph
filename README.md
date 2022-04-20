@@ -23,7 +23,5 @@ Some pitfalls:
 * Perfomance?
 * ...
 
-See the [examples](examples/).
-
-
+See the [examples](examples/) and [documentation](https://docs.rs/rugraph/latest/rugraph/)
 

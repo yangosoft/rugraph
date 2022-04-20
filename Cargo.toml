@@ -1,6 +1,6 @@
 [package]
 name = "rugraph"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["yangosoft"]
 description = "Simple directed and multidirected graph library."
@@ -9,6 +9,7 @@ homepage = "https://github.com/yangosoft/rugraph"
 repository = "https://github.com/yangosoft/rugraph"
 readme = "README.md"
 keywords = ["graph", "digraph", "multidirected", "multidigraph", "dot"]
+documentation = ""
 
 
 

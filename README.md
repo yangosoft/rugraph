@@ -9,6 +9,7 @@ This is a toy project to learn Rust. Not intended for real use.
 
 Current features:
 
+* Undirected graph implementation
 * Directed graph implementation
 * Multi directed graph implementation
 * All simple path algorithm implemented

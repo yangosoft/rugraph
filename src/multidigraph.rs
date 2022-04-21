@@ -5,6 +5,8 @@ use std::io::Write;
 use std::rc::Rc;
 use std::vec::Vec;
 
+use crate::rugraph::IGraph;
+
 /// `MultiDiGraph` is actually a `generic` multi directed graph where each node of type `T`
 ///  and edge of type `E`
 ///  must implement: `T: Ord + Clone + std::fmt::Display + std::fmt::Debug` and
@@ -61,18 +63,6 @@ where
         }
     }
 
-    /// Adds a new node `elem` to the graph
-    pub fn add_node(&mut self, elem: T) {
-        if self.node_exists(elem.clone()) {
-            return;
-        }
-
-        let mut nodes = self.nodes.borrow_mut();
-        let n = Rc::new(MultiNode::<T, E>::new(elem));
-
-        nodes.push(n);
-    }
-
     ///Creates a new edge from node `from` to node `to`
     ///nodes `from` and `to` must be previously added to the graph
     pub fn add_edge(&mut self, from: T, to: T, edge: E) {
@@ -95,54 +85,6 @@ where
             node: m.clone(),
             edge: edge,
         }));
-    }
-
-    pub fn node_exists(&self, from: T) -> bool {
-        let nodes = self.nodes.borrow();
-        let idx_from = nodes.iter().position(|r| r.elem == from);
-        match idx_from {
-            None => {
-                return false;
-            }
-            Some(_value) => {
-                return true;
-            }
-        }
-    }
-
-    /// Returns if node `to` is a neighbord of `from`
-    pub fn is_directly_connected(&self, from: T, to: T) -> bool {
-        let nodes = self.nodes.borrow();
-        let ret_idx_from = self.get_index_by_node_id(from.clone());
-        let idx_from;
-        match ret_idx_from {
-            Ok(v) => idx_from = v,
-            Err(e) => {
-                println!("Error {}", e);
-                return false;
-            }
-        };
-
-        let ret_idx_to = self.get_index_by_node_id(to.clone());
-        let idx_to;
-        match ret_idx_to {
-            Ok(v) => idx_to = v,
-            Err(e) => {
-                println!("Error {}", e);
-                return false;
-            }
-        };
-
-        let n = &nodes[idx_from];
-        let m = nodes[idx_to].clone();
-        for e in n.neighbors.borrow().iter() {
-            if Rc::ptr_eq(&e.node, &m) {
-                //println!("Node {} is connected to {}", from, to);
-                return true;
-            }
-        }
-        //println!("Node {} is NOT connected to {}", from, to);
-        return false;
     }
 
     /// Returns if node `to` is a neighbord of `from` by edge `edge`
@@ -208,45 +150,6 @@ where
         }
 
         return neighbors;
-    }
-
-    /// Returns if a node `from` is connected to a node `to`
-    pub fn is_connected(&self, from: T, to: T) -> bool {
-        //println!("Checking from {} to {}", from, to);
-        let mut seen = Vec::<(T, E)>::new();
-        let mut to_process = Vec::<(T, E)>::new();
-
-        let neighbors = self.get_neighbors(from.clone());
-        for n in neighbors.iter() {
-            to_process.push(n.clone());
-        }
-        //println!(" |-> Neighbors of {} : {:?}",from,neighbors);
-
-        let mut end = false;
-        while !end {
-            let node = to_process.pop().unwrap().clone();
-            let node_id = node.0;
-
-            let neighbors = self.get_neighbors(node_id.clone());
-            //println!(" |-> Neighbors of {} : {:?}",node_id,neighbors);
-            let contains = neighbors.iter().any(|r| r.0 == to.clone());
-            //println!("    |-> Neighbors of {} contains {}? {}",node_id,from,contains);
-
-            if contains {
-                return true;
-            } else {
-                for n in neighbors.iter() {
-                    if !seen.contains(n) {
-                        to_process.push(n.clone());
-                        seen.push(n.clone());
-                    }
-                }
-            }
-
-            end = to_process.is_empty();
-        }
-
-        return false;
     }
 
     /// Returns a vector `Vec<Vec<(T, T, E)>>` containing all the simple paths
@@ -334,17 +237,132 @@ where
             visited.remove(index);
         }
     }
+}
+
+impl<T, E> Drop for MultiDiGraph<T, E>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+    E: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
+    fn drop(&mut self) {
+        self.nodes.borrow_mut().clear();
+    }
+}
+
+impl<T, E> IGraph<T> for MultiDiGraph<T, E>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+    E: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
+    /// Adds a new node `elem` to the graph
+    fn add_node(&mut self, elem: T) {
+        if self.node_exists(elem.clone()) {
+            return;
+        }
+
+        let mut nodes = self.nodes.borrow_mut();
+        let n = Rc::new(MultiNode::<T, E>::new(elem));
+
+        nodes.push(n);
+    }
+
+    fn node_exists(&self, from: T) -> bool {
+        let nodes = self.nodes.borrow();
+        let idx_from = nodes.iter().position(|r| r.elem == from);
+        match idx_from {
+            None => {
+                return false;
+            }
+            Some(_value) => {
+                return true;
+            }
+        }
+    }
+
+    /// Returns if node `to` is a neighbord of `from`
+    fn is_directly_connected(&self, from: T, to: T) -> bool {
+        let nodes = self.nodes.borrow();
+        let ret_idx_from = self.get_index_by_node_id(from.clone());
+        let idx_from;
+        match ret_idx_from {
+            Ok(v) => idx_from = v,
+            Err(e) => {
+                println!("Error {}", e);
+                return false;
+            }
+        };
+
+        let ret_idx_to = self.get_index_by_node_id(to.clone());
+        let idx_to;
+        match ret_idx_to {
+            Ok(v) => idx_to = v,
+            Err(e) => {
+                println!("Error {}", e);
+                return false;
+            }
+        };
+
+        let n = &nodes[idx_from];
+        let m = nodes[idx_to].clone();
+        for e in n.neighbors.borrow().iter() {
+            if Rc::ptr_eq(&e.node, &m) {
+                //println!("Node {} is connected to {}", from, to);
+                return true;
+            }
+        }
+        //println!("Node {} is NOT connected to {}", from, to);
+        return false;
+    }
+
+    /// Returns if a node `from` is connected to a node `to`
+    fn is_connected(&self, from: T, to: T) -> bool {
+        //println!("Checking from {} to {}", from, to);
+        let mut seen = Vec::<(T, E)>::new();
+        let mut to_process = Vec::<(T, E)>::new();
+
+        let neighbors = self.get_neighbors(from.clone());
+        for n in neighbors.iter() {
+            to_process.push(n.clone());
+        }
+        //println!(" |-> Neighbors of {} : {:?}",from,neighbors);
+
+        let mut end = false;
+        while !end {
+            let node = to_process.pop().unwrap().clone();
+            let node_id = node.0;
+
+            let neighbors = self.get_neighbors(node_id.clone());
+            //println!(" |-> Neighbors of {} : {:?}",node_id,neighbors);
+            let contains = neighbors.iter().any(|r| r.0 == to.clone());
+            //println!("    |-> Neighbors of {} contains {}? {}",node_id,from,contains);
+
+            if contains {
+                return true;
+            } else {
+                for n in neighbors.iter() {
+                    if !seen.contains(n) {
+                        to_process.push(n.clone());
+                        seen.push(n.clone());
+                    }
+                }
+            }
+
+            end = to_process.is_empty();
+        }
+
+        return false;
+    }
 
     /// Exports the graph to a dot file. `file` must be a valid
     /// file ready to be written.
     /// `graph_name` is the name of the graph
-    pub fn to_dot_file(&self, file: &mut File, graph_name: &String) {
+    fn to_dot_file(&self, file: &mut File, graph_name: &String) {
         let s = self.to_dot_string(graph_name.borrow());
         file.write_all(s.as_bytes()).expect("Error writing file!");
     }
 
     /// Returns an `String` with a dot file representation of the graph
-    pub fn to_dot_string(&self, graph_name: &String) -> String {
+    fn to_dot_string(&self, graph_name: &String) -> String {
         let mut s = String::from("digraph ") + graph_name + &String::from("{\n");
         let nodes = self.nodes.borrow();
         for n in nodes.iter() {
@@ -362,22 +380,19 @@ where
         return s;
     }
 
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         return self.nodes.borrow().is_empty();
     }
 
-    pub fn count_nodes(&self) -> usize {
+    fn count_nodes(&self) -> usize {
         return self.nodes.borrow().len();
     }
-}
-
-impl<T, E> Drop for MultiDiGraph<T, E>
-where
-    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
-    E: Ord + Clone + std::fmt::Display + std::fmt::Debug,
-{
-    fn drop(&mut self) {
-        self.nodes.borrow_mut().clear();
+    fn get_nodes(&self) -> Vec<T> {
+        let mut ret = Vec::<T>::new();
+        for n in self.nodes.borrow().iter() {
+            ret.push(n.elem.clone());
+        }
+        return ret;
     }
 }
 
@@ -418,7 +433,7 @@ pub fn multidigraph_from_dot_string(
         if line.is_empty() {
             continue;
         }
-        println!("Line {}", line);
+        //println!("Line {}", line);
         // [
         let idx3 = match line.chars().position(|c| c == '[') {
             None => {
@@ -458,6 +473,7 @@ pub fn multidigraph_from_dot_string(
 mod tests {
     use super::MultiDiGraph;
     use crate::multidigraph::multidigraph_from_dot_string;
+    use crate::rugraph::IGraph;
     #[test]
     fn multidigraph_test1() {
         let mut graph = MultiDiGraph::<i32, i32>::new();

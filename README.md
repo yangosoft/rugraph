@@ -2,7 +2,7 @@
 Graph lib for Rust
 
 ![rugraph workflow](https://github.com/yangosoft/rugraph/actions/workflows/rust.yml/badge.svg)
-![crates.io](https://img.shields.io/crates/v/rugraph.svg)](https://crates.io/crates/rugraph)
+[![crates.io](https://img.shields.io/crates/v/rugraph.svg)](https://crates.io/crates/rugraph)
 [![documentation](https://img.shields.io/badge/docs-live-brightgreen)](https://docs.rs/rugraph)
 
 

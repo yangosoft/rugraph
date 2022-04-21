@@ -37,3 +37,20 @@ pub trait IDiGraph<T> {
     /// Returns a vector containing the `neighbors` of node `from`
     fn get_neighbors(&self, from: T) -> Vec<T>;
 }
+
+/// This trait is contains the basic behaviour of a `multi directed graph`
+pub trait IMultiDiGraph<T,E> {
+    ///Creates a new edge from node `from` to node `to`
+    ///nodes `from` and `to` must be previously added to the graph
+    fn add_edge(&mut self, from: T, to: T, edge: E);
+
+    /// Returns if node `to` is a neighbord of `from` by edge `edge`
+    fn is_directly_connected_by(&self, from: T, to: T, edge: E) -> bool;
+
+    /// Returns a vector `Vec<Vec<(T, T, E)>>` containing all the simple paths
+    /// from node `from` to node `to` in a vector of tuples `(from,to,edge)`
+    fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<(T, T, E)>>;
+
+    /// Returns a vector containing the `neighbors` of node `from`
+    fn get_neighbors(&self, from: T) -> Vec<(T, E)>;
+}

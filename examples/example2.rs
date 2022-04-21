@@ -1,4 +1,6 @@
 use rugraph::multidigraph::MultiDiGraph;
+
+use rugraph::rugraph::IGraph;
 use std::fs::File;
 
 fn main() {

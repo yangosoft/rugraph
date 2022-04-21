@@ -1,5 +1,6 @@
 use rugraph::rugraph::Graph;
 use rugraph::rugraph::IGraph;
+use rugraph::rugraph::IDiGraph;
 use rugraph::rugraph::graph_from_dot_string;
 use std::fs::File;
 

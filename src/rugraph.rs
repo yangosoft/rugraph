@@ -9,16 +9,8 @@ use std::vec::Vec;
 pub trait IGraph<T> {
     /// Adds a new node `elem` to the graph
     fn add_node(&mut self, elem: T);
-    ///Creates a new edge from node `from` to node `to`
-    ///nodes `from` and `to` must be previously added to the graph
-    fn add_edge(&mut self, from: T, to: T);
-    /// Returns a `Vec<Vec<T>>` containing all the simple paths
-    /// from node `from` to node `to`
-    fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<T>>;
     /// Returns `true` if node `node` exists
     fn node_exists(&self, node: T) -> bool;
-    /// Returns a vector containing the `neighbors` of node `from`
-    fn get_neighbors(&self, from: T) -> Vec<T>;
     /// Returns if a node `from` is connected to a node `to`
     fn is_connected(&self, from: T, to: T) -> bool;
     /// Returns if node `to` is a neighbord of `from`
@@ -33,7 +25,18 @@ pub trait IGraph<T> {
     fn is_empty(&self) -> bool;
     /// Returns how many nodes are in the graph
     fn count_nodes(&self) -> usize;
-    // TODO: add this fn from_dot_string(&self, content: &String) -> Result<bool, &'static str>;
+}
+
+/// This trait is contains the basic behaviour of a `Graph`
+pub trait IDiGraph<T> {
+    ///Creates a new edge from node `from` to node `to`
+    ///nodes `from` and `to` must be previously added to the graph
+    fn add_edge(&mut self, from: T, to: T);
+    /// Returns a `Vec<Vec<T>>` containing all the simple paths
+    /// from node `from` to node `to`
+    fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<T>>;
+    /// Returns a vector containing the `neighbors` of node `from`
+    fn get_neighbors(&self, from: T) -> Vec<T>;
 }
 
 /// `Graph` is actually a `generic` directed graph where each node of type `T`
@@ -140,34 +143,7 @@ where
         //println!("nodes length: {}", nodes.len());
     }
 
-    fn add_edge(&mut self, from: T, to: T) {
-        if !self.node_exists(from.clone())
-            || !self.node_exists(to.clone())
-            || self.is_directly_connected(from.clone(), to.clone())
-        {
-            return;
-        }
-
-        let nodes = self.nodes.borrow_mut();
-
-        let idx_from = nodes.iter().position(|r| r.elem == from).unwrap();
-        let idx_to = nodes.iter().position(|r| r.elem == to).unwrap();
-
-        let n = &nodes[idx_from];
-        let m = nodes[idx_to].clone();
-
-        n.neighbors.borrow_mut().push(m);
-    }
-
-    fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<T>> {
-        let mut ret = Vec::<Vec<T>>::new();
-        let mut current_path = Vec::<T>::new();
-        let mut visited = Vec::<T>::new();
-
-        self.dfs(from, to, &mut ret, &mut current_path, &mut visited);
-
-        return ret;
-    }
+    
 
     fn node_exists(&self, node: T) -> bool {
         let nodes = self.nodes.borrow();
@@ -182,26 +158,7 @@ where
         }
     }
 
-    fn get_neighbors(&self, from: T) -> Vec<T> {
-        let mut neighbors = Vec::<T>::new();
-
-        if !self.node_exists(from.clone()) {
-            return neighbors;
-        }
-
-        let nodes = self.nodes.borrow();
-
-        let idx_from = nodes.iter().position(|r| r.elem == from).unwrap();
-
-        let n = &nodes[idx_from];
-
-        //n.neighbors
-        for e in n.neighbors.borrow().iter() {
-            neighbors.push(e.elem.clone());
-        }
-
-        return neighbors;
-    }
+    
     fn is_connected(&self, from: T, to: T) -> bool {
         //println!("Checking from {} to {}", from, to);
         let mut seen = Vec::<T>::new();
@@ -295,8 +252,75 @@ where
     }
 }
 
-/// Returns a directed string graph `Graph<String>` from a dot file content
-pub fn graph_from_dot_string(content: &String) -> Result<Graph<String>, &'static str> {
+impl<T> IDiGraph<T> for Graph<T>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
+    fn add_edge(&mut self, from: T, to: T) {
+        if !self.node_exists(from.clone())
+            || !self.node_exists(to.clone())
+            || self.is_directly_connected(from.clone(), to.clone())
+        {
+            return;
+        }
+
+        let nodes = self.nodes.borrow_mut();
+
+        let idx_from = nodes.iter().position(|r| r.elem == from).unwrap();
+        let idx_to = nodes.iter().position(|r| r.elem == to).unwrap();
+
+        let n = &nodes[idx_from];
+        let m = nodes[idx_to].clone();
+
+        n.neighbors.borrow_mut().push(m);
+    }
+
+    fn all_simple_paths(&self, from: T, to: T) -> Vec<Vec<T>> {
+        let mut ret = Vec::<Vec<T>>::new();
+        let mut current_path = Vec::<T>::new();
+        let mut visited = Vec::<T>::new();
+
+        self.dfs(from, to, &mut ret, &mut current_path, &mut visited);
+
+        return ret;
+    }
+
+    fn get_neighbors(&self, from: T) -> Vec<T> {
+        let mut neighbors = Vec::<T>::new();
+
+        if !self.node_exists(from.clone()) {
+            return neighbors;
+        }
+
+        let nodes = self.nodes.borrow();
+
+        let idx_from = nodes.iter().position(|r| r.elem == from).unwrap();
+
+        let n = &nodes[idx_from];
+
+        //n.neighbors
+        for e in n.neighbors.borrow().iter() {
+            neighbors.push(e.elem.clone());
+        }
+
+        return neighbors;
+    }
+}
+
+
+
+impl<T> Drop for Graph<T>
+where
+    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
+{
+    fn drop(&mut self) {
+        self.nodes.borrow_mut().clear();
+    }
+}
+
+    /// Returns a directed string graph `Graph<String>` from a dot file content
+pub fn graph_from_dot_string(content: &String) -> Result<Graph<String>, &'static str>
+{
     let mut graph = Graph::<String>::new();
     let idx1: usize;
     let idx2: usize;
@@ -346,20 +370,13 @@ pub fn graph_from_dot_string(content: &String) -> Result<Graph<String>, &'static
     Ok(graph)
 }
 
-impl<T> Drop for Graph<T>
-where
-    T: Ord + Clone + std::fmt::Display + std::fmt::Debug,
-{
-    fn drop(&mut self) {
-        self.nodes.borrow_mut().clear();
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Graph;
-    use crate::rugraph::graph_from_dot_string;
+    
     use crate::rugraph::IGraph;
+    use crate::rugraph::IDiGraph;
+    use crate::rugraph::graph_from_dot_string;
     use std::fs::File;
     #[test]
     fn it_works() {

@@ -361,6 +361,14 @@ where
         s = s + &String::from("}\n");
         return s;
     }
+
+    pub fn is_empty(&self) -> bool {
+        return self.nodes.borrow().is_empty();
+    }
+
+    pub fn count_nodes(&self) -> usize {
+        return self.nodes.borrow().len();
+    }
 }
 
 impl<T, E> Drop for MultiDiGraph<T, E>
@@ -373,9 +381,83 @@ where
     }
 }
 
+/// Returns a multidirected string graph `MultiDiGraph<String, String>` from a dot file content
+pub fn multidigraph_from_dot_string(
+    content: &String,
+) -> Result<MultiDiGraph<String, String>, &'static str> {
+    let mut graph = MultiDiGraph::<String, String>::new();
+    let idx1: usize;
+    let idx2: usize;
+    match content.chars().position(|c| c == '{') {
+        None => {
+            return Err("Dot file not correct. { not found.");
+        }
+        Some(i) => {
+            idx1 = i + 1;
+        }
+    }
+
+    match content.chars().position(|c| c == '}') {
+        None => {
+            return Err("Dot file not correct. } not found.");
+        }
+        Some(i) => {
+            idx2 = i - 1;
+        }
+    }
+
+    if idx2 < idx1 {
+        return Err("Dot file not correct. } before {");
+    }
+
+    let c = &content[idx1..idx2];
+    //println!("Content {}",c);
+    let v_c: Vec<&str> = c.split(';').collect();
+
+    for line in v_c.iter() {
+        if line.is_empty() {
+            continue;
+        }
+        println!("Line {}", line);
+        // [
+        let idx3 = match line.chars().position(|c| c == '[') {
+            None => {
+                return Err("Dot file not correct. [ not found.");
+            }
+            Some(i) => i - 1,
+        };
+
+        let l_nodes = line[0..idx3].trim();
+
+        let v_nodes: Vec<&str> = l_nodes.split("->").collect();
+
+        let n_from;
+        let n_to;
+        if v_nodes.len() == 2 {
+            n_from = v_nodes[0].clone().trim().to_string();
+            n_to = v_nodes[1].clone().trim().to_string();
+            graph.add_node(n_from.clone());
+            graph.add_node(n_to.clone());
+        } else {
+            return Err("Dot file not correct.");
+        }
+
+        let label = line[idx3..]
+            .replace("[label=\"", "")
+            .replace("\"]", "")
+            .trim()
+            .to_string();
+        //println!("LAbel {}",label.clone());
+        graph.add_edge(n_from, n_to, label.to_string())
+    }
+
+    Ok(graph)
+}
+
 #[cfg(test)]
 mod tests {
     use super::MultiDiGraph;
+    use crate::multidigraph::multidigraph_from_dot_string;
     #[test]
     fn multidigraph_test1() {
         let mut graph = MultiDiGraph::<i32, i32>::new();
@@ -446,5 +528,24 @@ mod tests {
         let s = graph.to_dot_string(&String::from("to_dot_multidigraph_test"));
         println!("Dot:\n{}", s);
         assert_eq!(s.is_empty(), false);
+    }
+
+    #[test]
+    fn multidigraph_from_dot_str() {
+        let content =
+            String::from("digraph multidigraph_from_dot_str{\na -> b [label=\"ab\"];\na -> d [label=\"ad\"];\nb -> c [label=\"bc\"];\nc -> d [label=\"cd\"];\n}");
+
+        let graph = match multidigraph_from_dot_string(&content) {
+            Ok(v) => v,
+            Err(e) => {
+                println!("Error {}", e);
+                MultiDiGraph::<String, String>::new()
+            }
+        };
+
+        assert_eq!(graph.count_nodes(), 4);
+        let s = graph.to_dot_string(&String::from("multidigraph_from_dot_str"));
+        println!("{}", s);
+        //assert_eq!(s,content);
     }
 }

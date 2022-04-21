@@ -13,6 +13,7 @@ Current features:
 * Multi directed graph implementation
 * All simple path algorithm implemented
 * Dot file export for Graphivz
+* Dot file import 
 
 
 Some pitfalls:

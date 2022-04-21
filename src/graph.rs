@@ -47,14 +47,17 @@ where
             | self.digraph.is_directly_connected(to.clone(), from.clone());
     }
 
+    /// TODO: not implemented yet
     fn to_dot_file(&self, file: &mut File, graph_name: &String) {
         let s = self.to_dot_string(&graph_name.clone());
         file.write_all(s.as_bytes()).expect("Error writing file!");
     }
 
+    /// TODO: not implemented yet
     fn to_dot_string(&self, graph_name: &String) -> String {
         let mut s = self.digraph.to_dot_string(graph_name);
         s = s.replace("digraph","graph").replace("->", "--");
+        //TODO detect a -- b .. b -- a cases
         return s;
     }
 

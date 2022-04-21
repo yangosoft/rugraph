@@ -1,9 +1,9 @@
 [package]
 name = "rugraph"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2021"
 authors = ["yangosoft"]
-description = "Simple directed and multidirected graph library."
+description = "Simple undirected, directed and multidirected graph library."
 license-file = "LICENSE"
 homepage = "https://github.com/yangosoft/rugraph"
 repository = "https://github.com/yangosoft/rugraph"
@@ -19,6 +19,10 @@ crate-type = ["bin"]
 
 [[example]]
 name = "example2"
+crate-type = ["bin"]
+
+[[example]]
+name = "example3"
 crate-type = ["bin"]
 
 [dependencies]

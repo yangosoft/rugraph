@@ -27,7 +27,7 @@ fn main() {
 
     let graph2 = match digraph_from_dot_string(&s) {
         Err(e) => {
-            println!("Error {e}");
+            println!("Error {}",e);
             return;
         }
         Ok(v) => v,

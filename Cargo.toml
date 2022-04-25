@@ -1,6 +1,6 @@
 [package]
 name = "rugraph"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
 authors = ["yangosoft"]
 description = "Simple undirected, directed and multidirected graph library."

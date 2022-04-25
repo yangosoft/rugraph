@@ -84,17 +84,17 @@ where
         current_path: &mut Vec<(T, T, E)>,
         visited: &mut Vec<T>,
     ) {
-        if visited.contains(&from.clone()) {
+        if visited.contains(&previous_from.clone()) {
             return;
         }
-        visited.push(from.clone());
+        visited.push(previous_from.clone());
         current_path.push((previous_from.clone(), dst.clone(), edge.clone()));
         if from == to {
             simple_path.push(current_path.clone());
-            if visited.contains(&from.clone()) {
+            if visited.contains(&previous_from.clone()) {
                 let index = visited
                     .iter()
-                    .position(|x| x.clone() == from.clone())
+                    .position(|x| x.clone() == previous_from.clone())
                     .unwrap();
                 visited.remove(index);
                 current_path.pop();
@@ -117,10 +117,10 @@ where
         }
 
         current_path.pop();
-        if visited.contains(&from.clone()) {
+        if visited.contains(&previous_from.clone()) {
             let index = visited
                 .iter()
-                .position(|x| x.clone() == from.clone())
+                .position(|x| x.clone() == previous_from.clone())
                 .unwrap();
             visited.remove(index);
         }
@@ -472,8 +472,10 @@ where
 mod tests {
     use super::MultiDiGraph;
     use crate::multidigraph::multidigraph_from_dot_string;
+    use crate::multidigraph::File;
     use crate::rugraph::IGraph;
     use crate::rugraph::IMultiDiGraph;
+
     #[test]
     fn multidigraph_test1() {
         let mut graph = MultiDiGraph::<i32, i32>::new();
@@ -588,9 +590,73 @@ mod tests {
 
         println!("From a to d");
         let paths = graph.all_simple_paths("a".to_string(), "f".to_string());
-        println!("{:?}", paths);
-        //
+        println!("Len {} {:?}", paths.len(), paths);
+
         assert_eq!(
+            paths,
+            vec![
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab0".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc0".to_string()),
+                    ("c".to_string(), "d".to_string(), "cd".to_string()),
+                    ("d".to_string(), "e".to_string(), "de".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab0".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc0".to_string()),
+                    ("c".to_string(), "e".to_string(), "ce".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab0".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc1".to_string()),
+                    ("c".to_string(), "d".to_string(), "cd".to_string()),
+                    ("d".to_string(), "e".to_string(), "de".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab0".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc1".to_string()),
+                    ("c".to_string(), "e".to_string(), "ce".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab1".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc0".to_string()),
+                    ("c".to_string(), "d".to_string(), "cd".to_string()),
+                    ("d".to_string(), "e".to_string(), "de".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab1".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc0".to_string()),
+                    ("c".to_string(), "e".to_string(), "ce".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab1".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc1".to_string()),
+                    ("c".to_string(), "d".to_string(), "cd".to_string()),
+                    ("d".to_string(), "e".to_string(), "de".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "b".to_string(), "ab1".to_string()),
+                    ("b".to_string(), "c".to_string(), "bc1".to_string()),
+                    ("c".to_string(), "e".to_string(), "ce".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ],
+                vec![
+                    ("a".to_string(), "d".to_string(), "ad".to_string()),
+                    ("d".to_string(), "e".to_string(), "de".to_string()),
+                    ("e".to_string(), "f".to_string(), "ef".to_string())
+                ]
+            ]
+        );
+
+        //
+        /*assert_eq!(
             paths,
             vec![
                 vec![
@@ -683,10 +749,17 @@ mod tests {
                     ("e".to_string(), "f".to_string(), "ef".to_string())
                 ]
             ]
-        );
+        );*/
+
+        println!("-----");
+        for p in paths {
+            println!("{:?}", p)
+        }
 
         let s = graph.to_dot_string(&String::from("to_dot_multidigraph_test"));
         println!("Dot:\n{}", s);
         assert_eq!(s.is_empty(), false);
+        let mut fd = File::create("test_multidirected.dot").expect("error creating file");
+        graph.to_dot_file(&mut fd, &String::from("paths_test"));
     }
 }

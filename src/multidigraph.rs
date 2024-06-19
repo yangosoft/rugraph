@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::Write;
@@ -244,13 +243,13 @@ where
     /// Exports the graph to a dot file. `file` must be a valid
     /// file ready to be written.
     /// `graph_name` is the name of the graph
-    fn to_dot_file(&self, file: &mut File, graph_name: &String) {
-        let s = self.to_dot_string(graph_name.borrow());
+    fn to_dot_file(&self, file: &mut File, graph_name: &str) {
+        let s = self.to_dot_string(graph_name);
         file.write_all(s.as_bytes()).expect("Error writing file!");
     }
 
     /// Returns an `String` with a dot file representation of the graph
-    fn to_dot_string(&self, graph_name: &String) -> String {
+    fn to_dot_string(&self, graph_name: &str) -> String {
         let mut s = String::from("digraph ") + graph_name + &String::from("{\n");
         let nodes = self.nodes.borrow();
         for n in nodes.iter() {
@@ -337,8 +336,8 @@ pub fn multidigraph_from_dot_string(
         let n_from;
         let n_to;
         if v_nodes.len() == 2 {
-            n_from = v_nodes[0].clone().trim().to_string();
-            n_to = v_nodes[1].clone().trim().to_string();
+            n_from = v_nodes[0].trim().to_string();
+            n_to = v_nodes[1].trim().to_string();
             graph.add_node(n_from.clone());
             graph.add_node(n_to.clone());
         } else {

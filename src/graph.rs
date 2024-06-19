@@ -1,9 +1,9 @@
-use std::fs::File;
-use std::vec::Vec;
-use std::io::Write;
 use crate::digraph::DiGraph;
 use crate::rugraph::IDiGraph;
 use crate::rugraph::IGraph;
+use std::fs::File;
+use std::io::Write;
+use std::vec::Vec;
 
 /// `Graph` is a `generic` undirected graph where each node of type `T`
 ///  must implement: `T: Ord + Clone + std::fmt::Display + std::fmt::Debug`
@@ -48,15 +48,15 @@ where
     }
 
     /// TODO: not implemented yet
-    fn to_dot_file(&self, file: &mut File, graph_name: &String) {
-        let s = self.to_dot_string(&graph_name.clone());
+    fn to_dot_file(&self, file: &mut File, graph_name: &str) {
+        let s = self.to_dot_string(&graph_name);
         file.write_all(s.as_bytes()).expect("Error writing file!");
     }
 
     /// TODO: not implemented yet
-    fn to_dot_string(&self, graph_name: &String) -> String {
-        let mut s = self.digraph.to_dot_string(graph_name);
-        s = s.replace("digraph","graph").replace("->", "--");
+    fn to_dot_string(&self, graph_name: &str) -> String {
+        let mut s = self.digraph.to_dot_string(&graph_name);
+        s = s.replace("digraph", "graph").replace("->", "--");
         //TODO detect a -- b .. b -- a cases
         return s;
     }

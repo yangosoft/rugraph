@@ -1,6 +1,5 @@
 use crate::rugraph::IDiGraph;
 use crate::rugraph::IGraph;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::Write;
@@ -188,16 +187,16 @@ where
         return false;
     }
 
-    fn to_dot_file(&self, file: &mut File, graph_name: &String) {
-        let s = self.to_dot_string(graph_name.borrow());
+    fn to_dot_file(&self, file: &mut File, graph_name: &str) {
+        let s = self.to_dot_string(graph_name);
         file.write_all(s.as_bytes()).expect("Error writing file!");
     }
 
-    fn to_dot_string(&self, graph_name: &String) -> String {
-        let mut s = String::from("digraph ") + graph_name + &String::from("{\n");
+    fn to_dot_string(&self, graph_name: &str) -> String {
+        let mut s = String::from("digraph ") + graph_name + &String::from(" {\n");
         let nodes = self.nodes.borrow();
         for n in nodes.iter() {
-            s = s + &n.elem.to_string();
+            s = s + &String::from("    ") + &n.elem.to_string();
             for m in n.neighbors.borrow().iter() {
                 s = s + &String::from(" -> ") + &m.elem.to_string();
             }
@@ -218,8 +217,7 @@ where
 
     fn get_nodes(&self) -> Vec<T> {
         let mut ret = Vec::<T>::new();
-        for n in self.nodes.borrow().iter()
-        {
+        for n in self.nodes.borrow().iter() {
             ret.push(n.elem.clone());
         }
         return ret;

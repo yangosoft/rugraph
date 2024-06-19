@@ -1,4 +1,3 @@
-
 use std::fs::File;
 use std::vec::Vec;
 
@@ -13,11 +12,11 @@ pub trait IGraph<T> {
     /// Returns if node `to` is a neighbord of `from`
     fn is_directly_connected(&self, from: T, to: T) -> bool;
     /// Returns an `String` with a dot file representation of the graph
-    fn to_dot_string(&self, graph_name: &String) -> String;
+    fn to_dot_string(&self, graph_name: &str) -> String;
     /// Exports the graph to a dot file. `file` must be a valid
     /// file ready to be written.
     /// `graph_name` is the name of the graph
-    fn to_dot_file(&self, file: &mut File, graph_name: &String);
+    fn to_dot_file(&self, file: &mut File, graph_name: &str);
     /// Returns if a graph doesn't contain nodes
     fn is_empty(&self) -> bool;
     /// Returns how many nodes are in the graph
@@ -39,7 +38,7 @@ pub trait IDiGraph<T> {
 }
 
 /// This trait is contains the basic behaviour of a `multi directed graph`
-pub trait IMultiDiGraph<T,E> {
+pub trait IMultiDiGraph<T, E> {
     ///Creates a new edge from node `from` to node `to`
     ///nodes `from` and `to` must be previously added to the graph
     fn add_edge(&mut self, from: T, to: T, edge: E);
